@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>minimized-thesis</title>
+     <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  </head>
+  <body>
+    <div id="status">Connecting to server...</div>
+    <div class="flex flex-col gap-4 w-72">
+      <textarea placeholder="Warning" class="textarea textarea-warning" id="textToBeSent"></textarea>
+      <textarea  placeholder="CHANGES WILL HAPPEN HERE" class="textarea textarea-primary" id="rec" ></textarea>
+    </div>
+    
+  </body>
+</html>
+<script>
+const textarea1 = document.getElementById('textToBeSent');
+const textarea2 = document.getElementById('rec');
+const status = document.getElementById('status');
+
+const ws = new WebSocket('ws://localhost:4000');
+
+ws.onopen = () =>{
+  status.textContent = "Connected to server";
+  status.style.color = 'green';
+}
+
+ws.onmessage = async (event) =>{
+  let message = event.data;
+
+  if (message instanceof Blob){
+    message = await message.text();
+  }
+  textarea1.value = message;
+  textarea2.value = message;
+}
+textarea1.addEventListener('input', () =>{
+  const text = textarea1.value
+  // const res = await fetch('http://localhost:4000/api/message', {
+  //   method: 'POST',
+  //   body: JSON.stringify({message: text}),
+  //   headers:{ 'content-type': 'application/json; charset=UTF-8'}
+  // })
+
+  // const data = await res.json();
+  if(ws.readyState == WebSocket.OPEN){
+    ws.send(text);
+  }
+  
+});
+textarea2.addEventListener('input', () =>{
+  const data = textarea2.value;
+
+  // const send = await fetch('http://localhost:4000/api/message',{
+    // method: 'POST',
+    // body: JSON.stringify({message: data}),
+    // headers: { 'content-type': 'application/json; charset=UTF-8'}
+  // });
+// 
+  // const rec = await send.json();
+  if(ws.readyState == WebSocket.OPEN){
+    ws.send(data);
+  }
+});
+
+ws.onerror = (error) => console.error('WebSocket Error:', error);
+</script>
